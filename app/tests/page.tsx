@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { ROOT_URL } from "../root_api";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function Test() {

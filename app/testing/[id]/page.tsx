@@ -37,7 +37,7 @@ export default function CheckTesting() {
   const [testCaseData, setTestCaseData] = useState<TestCase | null>(null);
   const router = useRouter();
   const params = useParams();
-  const test_id = params.id;
+  const test_id = parseInt(params.id);
 
   const currentTest = testsData[currentTestIndex];
   const selectedAnswer = selectedAnswers[currentTest?.id];
