@@ -11,7 +11,10 @@ export default function ConfirmToast({ closeToast, toastProps, onConfirm }: any)
             <button
                 onClick={() => {
                     onConfirm();     
-                    closeToast();    
+
+                    if (closeToast) {
+                        closeToast();
+                    }
                 }}
                 className="w-14 text-indigo-700 border-indigo-500 hover:border-red-500 hover:bg-red-300/50 bg-indigo-300/50 hover:shadow-xl border-3 hover:text-red-500 hover:shadow-red-500 hover:cursor-pointer  rounded-md transition-all"
             >

@@ -12,7 +12,7 @@ export const showConfirmToast = (message: string, onConfirm: () => void) => {
         ),
         {
             closeButton: false,
-            autoClose: 5000,
+            autoClose: false,    
             hideProgressBar: false,
             closeOnClick: false,
             pauseOnHover: true,
@@ -21,3 +21,4 @@ export const showConfirmToast = (message: string, onConfirm: () => void) => {
         }
     );
 }
+
