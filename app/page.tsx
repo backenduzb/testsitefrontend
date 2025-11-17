@@ -14,7 +14,7 @@ import useAuth from '@/auth/Authentications';
 const LoginRegisterPage = () => {
 
 
-    const { login } = useAuth();
+    const { login, isAuthenticated } = useAuth();
     const router = useRouter();
 
     const [classes, setclasses] = useState<string[]>();
@@ -42,7 +42,7 @@ const LoginRegisterPage = () => {
     const handleLoginSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const res = await axios.post(`${ROOT_URL}/accounts/login/`, loginData, {withCredentials: true});
+            const res = await axios.post(`${ROOT_URL}/accounts/login/`, loginData, { withCredentials: true });
             toast.success("Muvofaqiyatli login qilindi.");
             login();
             router.push('tests/');
@@ -79,7 +79,14 @@ const LoginRegisterPage = () => {
         );
     };
 
+
+
     useEffect(() => {
+        if (isAuthenticated) {
+            router.push('/tests/')
+            return;
+        }
+
         const fetchClasses = async () => {
             try {
                 const res = await axios.get(`${ROOT_URL}/accounts/register/`);
@@ -90,8 +97,10 @@ const LoginRegisterPage = () => {
                 console.error(e);
             }
         };
+
         fetchClasses();
-    }, []);
+    }, [isAuthenticated]);
+
 
     const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
     return (

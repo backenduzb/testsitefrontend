@@ -19,11 +19,12 @@ export default function Test() {
         router.push(`/testing/${test_id}`)
     }
 
-
-
+    const handleScoresPage = async(test_id: number)=>{
+        router.push(`/status/${test_id}`)
+    }
     return (
         <div className="min-h-screen w-full flex flex-col items-center py-12 px-4 font-mono select-none">
-    
+
             <div className="w-full max-w-6xl overflow-hidden bg-white border border-gray-200 rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.08)]">
                 <div className="grid grid-cols-4 py-4 px-6 bg-white border-b border-gray-300 text-gray-500 font-semibold text-center">
                     <div>NOMI</div>
@@ -41,17 +42,20 @@ export default function Test() {
                             >
                                 <div className="truncate font-medium text-gray-700">{cls.name}</div>
                                 <div className="truncate text-gray-500">{cls.subject?.name}</div>
-                                <div className="text-gray-500">{cls.test_count ?? "—"}</div>
+                                <div className="text-gray-500">{cls.tests_count ?? "—"}</div>
                                 <div className="w-40 h-full flex justify-center items-center">
 
-                                    <p onClick={() => handleStartTest(cls.id)} className="font-sans text-gray-400 hover:text-indigo-700 hover:cursor-pointer transition-all duration-300">Testni boshlash</p>
 
+                                    {cls.this_completed ? 
+                                    (<p onClick={()=> handleScoresPage(cls.id)} className="font-sans text-gray-400 hover:cursor-pointer hover:text-indigo-500 transition-all duration-300">Javobini ko'ring</p>):(
+                                    <p onClick={() => handleStartTest(cls.id)} className="font-sans text-gray-400 hover:text-indigo-700 hover:cursor-pointer transition-all duration-300">Testni boshlash</p>
+                                    )}
                                 </div>
                             </div>
                         ))
                     ) : (
                         <div className="py-6 text-center text-gray-400">
-                            Ma’lumotlar yuklanmoqda...
+                            Testlar topilmadi ...
                         </div>
                     )}
                 </div>

@@ -37,7 +37,7 @@ export default function CheckTesting() {
   const [testCaseData, setTestCaseData] = useState<TestCase | null>(null);
   const router = useRouter();
   const params = useParams();
-  const test_id = parseInt(params.id);
+  const test_id = params.id;
 
   const currentTest = testsData[currentTestIndex];
   const selectedAnswer = selectedAnswers[currentTest?.id];
@@ -86,7 +86,7 @@ export default function CheckTesting() {
       );
       
       console.log("Test results:", response.data);
-      alert(`Test completed! Your score: ${response.data.current_scores.score}/${response.data.current_scores.total}`);
+      router.push(`/status/${test_id}`);
     } catch (err) {
       console.error("Error submitting test:", err);
       alert("Error submitting test. Please try again.");
