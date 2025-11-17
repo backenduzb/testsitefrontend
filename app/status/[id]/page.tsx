@@ -77,7 +77,7 @@ export default function Results() {
                     {scoreData.map((score) => (
                         <tr key={score.id}>
                             <td className="border px-4 bg-white border-gray-300 py-2">Informatika</td>
-                            <td className="border px-4 bg-white border-gray-300 py-2">{score.total}</td>
+                            <td className="border px-4 bg-white border-gray-300 py-2">{score.completed}</td>
                             <td className="border px-4 bg-white border-gray-300 py-2">{score.score}</td>
                             <td className="border px-4 bg-white border-gray-300 py-2">{score.bilish_count}</td>
                             <td className="border px-4 bg-white border-gray-300 py-2">{score.bilish}</td>
