@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 export default function Test() {
     const [testdata, setTestdata] = useState([]);
     const router = useRouter();
+    const [StartCode, setStartCode] = useState();
+
     useEffect(() => {
         axios
             .get(`${ROOT_URL}/tests/all/`, { withCredentials: true })

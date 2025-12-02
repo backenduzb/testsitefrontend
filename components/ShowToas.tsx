@@ -12,12 +12,12 @@ export const showConfirmToast = (message: string, onConfirm: () => void) => {
         ),
         {
             closeButton: false,
-            autoClose: false,    
             hideProgressBar: false,
             closeOnClick: false,
             pauseOnHover: true,
             draggable: false,
             position: "top-left",
+            autoClose: true,    
         }
     );
 }

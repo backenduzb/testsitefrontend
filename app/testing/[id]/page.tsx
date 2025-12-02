@@ -6,6 +6,7 @@ import { useRouter, useParams } from "next/navigation";
 import { ROOT_URL } from "../../root_api";
 import axios from "axios";
 import { showConfirmToast } from "@/components/ShowToas";
+import SecureCodeModal from "@/components/SecureCodeModal"; 
 
 interface Test {
   id: number;
@@ -35,12 +36,67 @@ export default function CheckTesting() {
   const [currentTestIndex, setCurrentTestIndex] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<{[key: number]: string}>({});
   const [testCaseData, setTestCaseData] = useState<TestCase | null>(null);
+  const [secureCode, setSecureCode] = useState<string>("");
+  const [showSecureModal, setShowSecureModal] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const router = useRouter();
   const params = useParams();
   const test_id = params.id;
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedCode = localStorage.getItem(`secure_code_${test_id}`);
+      if (savedCode) {
+        setSecureCode(savedCode);
+        setShowSecureModal(false);
+        fetchTests(savedCode);
+      }
+    }
+  }, [test_id]);
+
   const currentTest = testsData[currentTestIndex];
   const selectedAnswer = selectedAnswers[currentTest?.id];
+
+  const handleSecureCodeSubmit = (code: string) => {
+    if (code.trim() !== "") {
+      setSecureCode(code);
+      localStorage.setItem(`secure_code_${test_id}`, code);
+      setShowSecureModal(false);
+      fetchTests(code);
+    }
+  };
+
+  const fetchTests = async (code: string) => {
+    if (!test_id || !code) return;
+    
+    setIsLoading(true);
+    try {
+      const res = await axios.post(
+        `${ROOT_URL}/tests/all/`, 
+        { 
+          test_id, 
+          secure_code: code 
+        }, 
+        { withCredentials: true }
+      );
+      
+      if (res.data.data && res.data.data.length > 0) {
+        setTestsData(res.data.data);
+        setCurrentTestIndex(0);
+      } else {
+        localStorage.removeItem(`secure_code_${test_id}`);
+        setShowSecureModal(true);
+        alert("Noto'g'ri secure_code yoki test topilmadi");
+      }
+    } catch (err) {
+      console.log(err);
+      localStorage.removeItem(`secure_code_${test_id}`);
+      setShowSecureModal(true);
+      alert("Xatolik yuz berdi. Iltimos, secure_code ni qayta kiriting.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSelect = (option: string) => {
     if (currentTest) {
@@ -68,7 +124,11 @@ export default function CheckTesting() {
   };
 
   const handleFinish = async () => {
-    if (!test_id) return;
+    if (!test_id || !secureCode) {
+      alert("Secure_code topilmadi. Iltimos qayta kiriting.");
+      setShowSecureModal(true);
+      return;
+    }
     
     const answers = Object.entries(selectedAnswers).map(([testId, answer]) => ({
       test_id: parseInt(testId),
@@ -80,48 +140,55 @@ export default function CheckTesting() {
         `${ROOT_URL}/tests/check/`, 
         {
           testcase_id: test_id,
+          secure_code: secureCode,
           answers: answers
         },
         { withCredentials: true }
       );
       
       console.log("Test results:", response.data);
+      // Test tugagandan so'ng localStoragedan o'chirish
+      localStorage.removeItem(`secure_code_${test_id}`);
       router.push(`/status/${test_id}`);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error submitting test:", err);
-      alert("Error submitting test. Please try again.");
+      if (err.response?.status === 403) {
+        alert("Noto'g'ri secure_code. Iltimos qayta kiriting.");
+        localStorage.removeItem(`secure_code_${test_id}`);
+        setShowSecureModal(true);
+      } else {
+        alert("Error submitting test. Please try again.");
+      }
     }
   };
 
-  useEffect(() => {
-    if (!test_id) return;
-    
-    const fetchData = async () => {
-      try {
-        const res = await axios.post(
-          `${ROOT_URL}/tests/all/`, 
-          { test_id }, 
-          { withCredentials: true }
-        );
-        
-        if (res.data.data && res.data.data.length > 0) {
-          setTestsData(res.data.data);
-          setCurrentTestIndex(0);
-        }
-      } catch (err) {
-        console.log(err);
-      }
-    };
-
-    fetchData();
-  }, [test_id]);
+  const resetSecureCode = () => {
+    localStorage.removeItem(`secure_code_${test_id}`);
+    setSecureCode("");
+    setShowSecureModal(true);
+  };
 
   const testNumbers = testsData.length > 0 
     ? Array.from({ length: testsData.length }, (_, i) => i + 1)
     : [];
 
+  if (showSecureModal) {
+    return <SecureCodeModal onSubmit={handleSecureCodeSubmit} />;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-xl">Yuklanmoqda...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full select-none flex items-center justify-center flex-col -mt-20 h-screen ">
+ 
+      
+
       <div className="h-[60%] w-[90%] shadow-[0_1px_5px] shadow-gray-300 gap-5 p-10">
         <div className="h-[50%] w-full mt-2">
           <p>Savol {currentTestIndex + 1} / {testsData.length}</p>
