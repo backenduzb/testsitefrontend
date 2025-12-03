@@ -1,1 +1,1 @@
-export const ROOT_URL = "https://testsitebackend-production.up.railway.app/api/";
+export const ROOT_URL = "https://testsitebackend-production.up.railway.app/api";
