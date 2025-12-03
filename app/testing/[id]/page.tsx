@@ -48,7 +48,7 @@ export default function CheckTesting() {
   }, [selectedAnswers]);
 
   useEffect(() => {
-    testIdRef.current = test_id;
+    testIdRef.current = test_id || "";
   }, [test_id]);
 
   const calculateTimeLeft = useCallback(() => {
