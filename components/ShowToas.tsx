@@ -17,7 +17,7 @@ export const showConfirmToast = (message: string, onConfirm: () => void) => {
             pauseOnHover: true,
             draggable: false,
             position: "top-left",
-            autoClose: true,    
+            autoClose: 3000,    
         }
     );
 }
