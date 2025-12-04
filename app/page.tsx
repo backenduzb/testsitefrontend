@@ -70,11 +70,9 @@ const LoginRegisterPage = () => {
                 <p><strong>Password:</strong> <span className="font-mono">{username}</span></p>
             </div>,
             {
-                position: "top-right",
                 autoClose: false,
                 closeOnClick: false,
                 draggable: false,
-                theme: "light"
             }
         );
     };
