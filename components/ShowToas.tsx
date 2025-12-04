@@ -6,7 +6,7 @@ export const showConfirmToast = (message: string, onConfirm: () => void) => {
         (props) => (
             <ConfirmToast
                 {...props}
-                toastProps={{ message }}
+                message={message}
                 onConfirm={onConfirm}
             />
         ),
@@ -17,8 +17,7 @@ export const showConfirmToast = (message: string, onConfirm: () => void) => {
             pauseOnHover: true,
             draggable: false,
             position: "top-left",
-            autoClose: 3000,    
+            autoClose: 3000,
         }
     );
 }
-

@@ -6,6 +6,7 @@ import { ROOT_URL } from "../../root_api";
 import axios from "axios";
 import { showConfirmToast } from "@/components/ShowToas";
 import SecureCodeModal from "@/components/SecureCodeModal";
+import { toast } from "react-toastify";
 
 interface Test {
   id: number;
@@ -28,15 +29,15 @@ export default function CheckTesting() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [timeLeft, setTimeLeft] = useState<string>("00:00:00");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  
+
   const router = useRouter();
   const params = useParams();
-  
+
   // Ref'lar bilan current state'larni saqlash
   const secureCodeRef = useRef<string>("");
   const selectedAnswersRef = useRef<{ [key: number]: string }>({});
   const testIdRef = useRef<string | string[]>("");
-  
+
   const test_id = params.id;
 
   useEffect(() => {
@@ -71,7 +72,6 @@ export default function CheckTesting() {
     return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   }, [test_id]);
 
-  // Asosiy timer effect
   useEffect(() => {
     if (!test_id || showSecureModal) return;
 
@@ -83,7 +83,7 @@ export default function CheckTesting() {
 
       if (newTimeLeft === "00:00:00") {
         clearInterval(interval);
-        handleAutoFinish(); 
+        handleAutoFinish();
       }
     }, 1000);
 
@@ -92,13 +92,13 @@ export default function CheckTesting() {
 
   const handleAutoFinish = useCallback(async () => {
     if (isSubmitting) return;
-    
+
     setIsSubmitting(true);
-    
+
     const currentSecureCode = secureCodeRef.current;
     const currentTestId = testIdRef.current;
     const currentSelectedAnswers = selectedAnswersRef.current;
-    
+
     if (!currentTestId || !currentSecureCode) {
       alert("Test ma'lumotlari topilmadi. Iltimos qayta urinib ko'ring.");
       setIsSubmitting(false);
@@ -122,23 +122,22 @@ export default function CheckTesting() {
       );
 
       console.log("Test results (auto-finish):", response.data);
-      
-      // Tozalash
+
       localStorage.removeItem(`secure_code_${currentTestId}`);
       localStorage.removeItem(`over_time_${currentTestId}`);
       localStorage.removeItem(`left_time_${currentTestId}`);
-      
-      // Natijalar sahifasiga o'tish
+
       router.push(`/status/${currentTestId}`);
     } catch (err: any) {
       console.error("Error auto-submitting test:", err);
       if (err.response?.status === 403) {
-        alert("Vaqt tugadi, lekin javoblarni yuborishda xatolik. Iltimos administrator bilan bog'laning.");
+        toast.error("Vaqt tugadi, lekin javoblarni yuborishda xatolik. Iltimos administrator bilan bog'laning.");
         localStorage.removeItem(`secure_code_${currentTestId}`);
         localStorage.removeItem(`over_time_${currentTestId}`);
         setShowSecureModal(true);
       } else {
-        alert("Vaqt tugadi. Javoblarni yuborishda xatolik yuz berdi.");
+
+        toast.error("Iltimos hafsizlik kodini tekshirib ko'ring.");
       }
       setIsSubmitting(false);
     }
@@ -148,7 +147,7 @@ export default function CheckTesting() {
     if (!timeLeft || timeLeft === "00:00:00") return false;
     const [h, m, s] = timeLeft.split(":").map(Number);
     const totalSec = h * 3600 + m * 60 + s;
-    return totalSec <= 600; 
+    return totalSec <= 600;
   }, [timeLeft]);
 
   const isVeryDanger = useCallback(() => {
@@ -158,23 +157,21 @@ export default function CheckTesting() {
     return totalSec <= 60;
   }, [timeLeft]);
 
-  // Javoblarni localStorage'ga saqlash (qayta yuklanganida saqlash uchun)
   useEffect(() => {
     if (Object.keys(selectedAnswers).length > 0 && test_id) {
       localStorage.setItem(`answers_${test_id}`, JSON.stringify(selectedAnswers));
     }
   }, [selectedAnswers, test_id]);
 
-  // Oldingi javoblarni yuklash
   useEffect(() => {
     if (typeof window !== 'undefined' && test_id) {
       const savedCode = localStorage.getItem(`secure_code_${test_id}`);
       const savedAnswers = localStorage.getItem(`answers_${test_id}`);
-      
+
       if (savedCode) {
         setSecureCode(savedCode);
         setShowSecureModal(false);
-        
+
         if (savedAnswers) {
           try {
             setSelectedAnswers(JSON.parse(savedAnswers));
@@ -182,7 +179,7 @@ export default function CheckTesting() {
             console.error("Failed to parse saved answers:", e);
           }
         }
-        
+
         fetchTests(savedCode);
       }
     }
@@ -237,7 +234,7 @@ export default function CheckTesting() {
         }
       } else {
         setShowSecureModal(true);
-        alert("Noto'g'ri secure_code yoki test topilmadi");
+        toast.error("Iltimos hafsizlik kodini tekshirib ko'ring.");
         localStorage.removeItem(`secure_code_${test_id}`);
         localStorage.removeItem(`over_time_${test_id}`);
         localStorage.removeItem(`answers_${test_id}`);
@@ -245,7 +242,7 @@ export default function CheckTesting() {
     } catch (err) {
       console.error(err);
       setShowSecureModal(true);
-      alert("Xatolik yuz berdi. Iltimos, secure_code ni qayta kiriting.");
+      toast.error("Iltimos hafsizlik kodini tekshirib ko'ring.");
       localStorage.removeItem(`secure_code_${test_id}`);
       localStorage.removeItem(`over_time_${test_id}`);
       localStorage.removeItem(`answers_${test_id}`);
@@ -282,9 +279,9 @@ export default function CheckTesting() {
 
   const handleFinish = async () => {
     if (isSubmitting) return;
-    
+
     if (!test_id || !secureCode) {
-      alert("Secure_code topilmadi. Iltimos qayta kiriting.");
+
       setShowSecureModal(true);
       return;
     }
@@ -307,25 +304,24 @@ export default function CheckTesting() {
       );
 
       console.log("Test results:", response.data);
-      
-      // Tozalash
+
       localStorage.removeItem(`secure_code_${test_id}`);
       localStorage.removeItem(`over_time_${test_id}`);
       localStorage.removeItem(`answers_${test_id}`);
-      
+
       router.push(`/status/${test_id}`);
     } catch (err: any) {
       console.error("Error submitting test:", err);
       setIsSubmitting(false);
-      
+
       if (err.response?.status === 403) {
-        alert("Noto'g'ri secure_code. Iltimos qayta kiriting.");
+        toast.error("Iltimos hafsizlik kodini tekshirib ko'ring.");
         localStorage.removeItem(`secure_code_${test_id}`);
         localStorage.removeItem(`over_time_${test_id}`);
         localStorage.removeItem(`answers_${test_id}`);
         setShowSecureModal(true);
       } else {
-        alert("Error submitting test. Please try again.");
+        toast.error("Iltimos hafsizlik kodini tekshirib ko'ring.");
       }
     }
   };
@@ -395,7 +391,7 @@ export default function CheckTesting() {
           ))}
         </div>
       </div>
-      
+
       <div className="h-30 shadow-[0_1px_5px] shadow-gray-300 w-[90%] mt-0.5 p-3 flex items-center justify-center flex-col gap-1">
         <div className="w-full h-auto flex items-center justify-center gap-1 mt-2 flex-wrap">
           {testsData.map((_, index) => (
@@ -414,7 +410,7 @@ export default function CheckTesting() {
             </div>
           ))}
         </div>
-        
+
         <div className="w-full h-15 flex justify-between items-center mt-4">
           <div className="w-60 h-full flex items-center justify-left gap-3">
             <button
@@ -436,7 +432,7 @@ export default function CheckTesting() {
               Oldinga
             </button>
           </div>
-          
+
           <div>
             <button
               onClick={() => showConfirmToast("Testni tugatmoqchimisiz?", handleFinish)}
