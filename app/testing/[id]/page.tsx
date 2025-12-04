@@ -280,7 +280,7 @@ export default function CheckTesting() {
   const handleFinish = async () => {
     if (isSubmitting) return;
 
-    if (!test_id || !secureCode) {
+    if (!test_id) {
 
       setShowSecureModal(true);
       return;
@@ -297,7 +297,6 @@ export default function CheckTesting() {
         `${ROOT_URL}/tests/check/`,
         {
           testcase_id: test_id,
-          secure_code: secureCode,
           answers: answers
         },
         { withCredentials: true }
