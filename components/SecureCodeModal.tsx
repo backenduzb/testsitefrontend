@@ -17,7 +17,7 @@ const SecureCodeModal: React.FC<SecureCodeModalProps> = ({ onSubmit }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
         <h2 className="text-2xl font-bold mb-4 text-center">Secure Code Kiriting</h2>
         <p className="text-gray-600 mb-6 text-center">
@@ -50,7 +50,7 @@ const SecureCodeModal: React.FC<SecureCodeModalProps> = ({ onSubmit }) => {
         </form>
         
         <div className="mt-4 text-sm text-gray-500 text-center">
-          <p>Secure codeni administratoringizdan oling</p>
+          <p>Secure codeni ustozingizdan oling</p>
         </div>
       </div>
     </div>

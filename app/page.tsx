@@ -105,7 +105,6 @@ const LoginRegisterPage = () => {
     const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
     return (
         <div className="flex justify-center items-center -mt-20 h-screen px-4 ">
-            <ToastContainer />
             <div className="bg-white mt-10 rounded-2xl shadow-xl w-full max-w-md p-8">
                 <div className="flex justify-center items-center mb-6 h-20">
                     <img src={Image.src} alt="logo" width={124} height={124} />
