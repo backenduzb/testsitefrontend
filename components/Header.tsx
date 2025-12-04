@@ -37,7 +37,7 @@ export default function Header() {
                     className="hover:cursor-pointer"
                 />
                 {isOpen && (
-                    <div className="z-1000 absolute w-70 h-40 top-[140%] right-[-80%] shadow-[0_1px_8px] rounded shadow-gray-300 bg-white flex justify-center items-center flex-col">
+                    <div className="z-100 absolute w-70 h-40 top-[140%] right-[-80%] shadow-[0_1px_8px] rounded shadow-gray-300 bg-white flex justify-center items-center flex-col">
                         <div className="w-[90%] gap-2 flex items-center rounded h-16 hover:bg-indigo-300/50 transition-all duration-300 group">
                             <Image
                                 src={ProfileJPD}

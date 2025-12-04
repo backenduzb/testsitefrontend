@@ -347,7 +347,7 @@ export default function CheckTesting() {
     <div className="w-full select-none flex items-center justify-center flex-col -mt-20 h-screen">
       <div className="h-[60%] w-[90%] relative shadow-[0_1px_5px] shadow-gray-300 gap-5 p-10">
         <div
-          className={`absolute right-0 top-0 mt-2 mr-2 pl-5 pr-5 flex items-center justify-center border-2
+          className={`z-20 absolute right-0 top-0 mt-2 mr-2 pl-5 pr-5 flex items-center justify-center border-2
             ${veryDanger
               ? "border-red-600 ring-2 ring-red-400 animate-pulse bg-red-50/30"
               : danger
