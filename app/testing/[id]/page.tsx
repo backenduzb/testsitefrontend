@@ -7,6 +7,7 @@ import axios from "axios";
 import { showConfirmToast } from "@/components/ShowToas";
 import SecureCodeModal from "@/components/SecureCodeModal";
 import { toast } from "react-toastify";
+import Image from "next/image"; 
 
 interface Test {
   id: number;
@@ -19,6 +20,25 @@ interface Test {
   test_score: string;
   over_time: string;
 }
+const extractUrlFromText = (text: string): { hasImage: boolean; url: string | null; cleanText: string } => {
+  if (!text) return { hasImage: false, url: null, cleanText: text };
+  
+  const regex = /`([^`]*)`/;
+  const match = text.match(regex);
+  
+  if (match && match[1]) {
+    const url = match[1];
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'];
+    const isImageUrl = imageExtensions.some(ext => url.toLowerCase().endsWith(ext));
+    
+    if (isImageUrl) {
+      const cleanText = text.replace(regex, '').trim();
+      return { hasImage: true, url, cleanText };
+    }
+  }
+  
+  return { hasImage: false, url: null, cleanText: text };
+};
 
 export default function CheckTesting() {
   const [testsData, setTestsData] = useState<Test[]>([]);
@@ -29,11 +49,13 @@ export default function CheckTesting() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [timeLeft, setTimeLeft] = useState<string>("00:00:00");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-
+  const [questionHasImage, setQuestionHasImage] = useState<boolean>(false);
+  const [questionImageUrl, setQuestionImageUrl] = useState<string | null>(null);
+  const [answersHasImage, setAnswersHasImage] = useState<{ [key: string]: boolean }>({});
+  const [answersImageUrls, setAnswersImageUrls] = useState<{ [key: string]: string | null }>({});
   const router = useRouter();
   const params = useParams();
 
-  // Ref'lar bilan current state'larni saqlash
   const secureCodeRef = useRef<string>("");
   const selectedAnswersRef = useRef<{ [key: number]: string }>({});
   const testIdRef = useRef<string | string[]>("");
@@ -51,6 +73,37 @@ export default function CheckTesting() {
   useEffect(() => {
     testIdRef.current = test_id || "";
   }, [test_id]);
+
+  const processImages = useCallback((testData: Test[]) => {
+    if (!testData || testData.length === 0) return;
+
+    const currentTest = testData[currentTestIndex];
+    if (currentTest) {
+      const questionResult = extractUrlFromText(currentTest.question);
+      setQuestionHasImage(questionResult.hasImage);
+      setQuestionImageUrl(questionResult.url);
+      
+      const variantKeys = ['answer_a', 'answer_b', 'answer_c', 'answer_d'];
+      const answersImgStatus: { [key: string]: boolean } = {};
+      const answersImgUrls: { [key: string]: string | null } = {};
+      
+      variantKeys.forEach(key => {
+        const variantText = currentTest[key as keyof Test] as string;
+        const result = extractUrlFromText(variantText);
+        answersImgStatus[key] = result.hasImage;
+        answersImgUrls[key] = result.url;
+      });
+      
+      setAnswersHasImage(answersImgStatus);
+      setAnswersImageUrls(answersImgUrls);
+    }
+  }, [currentTestIndex]);
+
+  useEffect(() => {
+    if (testsData.length > 0) {
+      processImages(testsData);
+    }
+  }, [testsData, currentTestIndex, processImages]);
 
   const calculateTimeLeft = useCallback(() => {
     const endingDateTime = localStorage.getItem(`over_time_${test_id}`);
@@ -136,7 +189,6 @@ export default function CheckTesting() {
         localStorage.removeItem(`over_time_${currentTestId}`);
         setShowSecureModal(true);
       } else {
-
         toast.error("Iltimos hafsizlik kodini tekshirib ko'ring.");
       }
       setIsSubmitting(false);
@@ -212,6 +264,8 @@ export default function CheckTesting() {
         setTestsData(res.data.data);
         setCurrentTestIndex(0);
 
+        processImages(res.data.data);
+
         const storageKey = `over_time_${test_id}`;
         if (!localStorage.getItem(storageKey)) {
           const now = new Date();
@@ -281,7 +335,6 @@ export default function CheckTesting() {
     if (isSubmitting) return;
 
     if (!test_id) {
-
       setShowSecureModal(true);
       return;
     }
@@ -330,6 +383,19 @@ export default function CheckTesting() {
   const danger = isDanger();
   const veryDanger = isVeryDanger();
 
+  const getCleanQuestionText = () => {
+    if (!currentTest) return "";
+    const result = extractUrlFromText(currentTest.question);
+    return result.cleanText || currentTest.question;
+  };
+
+  const getCleanAnswerText = (key: string) => {
+    if (!currentTest) return "";
+    const variantText = currentTest[key as keyof Test] as string;
+    const result = extractUrlFromText(variantText);
+    return result.cleanText || variantText;
+  };
+
   if (showSecureModal) {
     return <SecureCodeModal onSubmit={handleSecureCodeSubmit} />;
   }
@@ -344,7 +410,7 @@ export default function CheckTesting() {
 
   return (
     <div className="w-full select-none flex items-center justify-center flex-col -mt-20 h-screen">
-      <div className="h-[60%] w-[90%] relative shadow-[0_1px_5px] shadow-gray-300 gap-5 p-10">
+      <div className="h-[60%] w-[90%] relative shadow-[0_1px_5px] shadow-gray-300 gap-5 p-10 overflow-auto">
         <div
           className={`z-20 absolute right-0 top-0 mt-2 mr-2 pl-5 pr-5 flex items-center justify-center border-2
             ${veryDanger
@@ -364,30 +430,67 @@ export default function CheckTesting() {
           </p>
         </div>
 
-        <div className="h-[50%] w-full mt-2">
+        <div className="h-auto w-full mt-2">
           <p>Savol {currentTestIndex + 1} / {testsData.length}</p>
-          <h2 className="text-gray-600 text-[18px] mt-4">
-            {currentTest?.question || "Savol yuklanmoqda..."}
-          </h2>
+          
+          <div className="mt-4">
+            <h2 className="text-gray-600 text-[18px] mb-2">
+              {getCleanQuestionText()}
+            </h2>
+            
+            {questionHasImage && questionImageUrl && (
+                  <img
+                    src={questionImageUrl}
+                    alt="Savol rasmi"
+                    className="object-contain w-1/2 h-full rounded-lg shadow-md"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+            )}
+          </div>
         </div>
 
-        <div className="h-[40%] w-full flex items-left justify-center flex-col gap-5 mt-6">
-          {['A', 'B', 'C', 'D'].map((option) => (
-            <div key={option} className="flex items-center justify-start gap-2">
-              <input
-                type="radio"
-                id={`option${option}`}
-                name="option"
-                checked={selectedAnswer === option}
-                onChange={() => handleSelect(option)}
-                className="w-5 h-5 border-4 border-gray-400 rounded-full appearance-none 
-                  checked:border-indigo-600 checked:border-7 cursor-pointer transition-colors"
-              />
-              <label htmlFor={`option${option}`} className="text-md font-bold text-gray-600 cursor-pointer">
-                {currentTest?.[`answer_${option.toLowerCase()}` as keyof Test] || `${option}) Variant`}
-              </label>
-            </div>
-          ))}
+        <div className="h-auto w-full flex items-left justify-center flex-col gap-5 mt-6">
+          {['A', 'B', 'C', 'D'].map((option) => {
+            const key = `answer_${option.toLowerCase()}`;
+            const hasImage = answersHasImage[key];
+            const imageUrl = answersImageUrls[key];
+            
+            return (
+              <div key={option} className="flex items-start justify-start gap-3 p-2 hover:bg-gray-50 rounded-lg">
+                <input
+                  type="radio"
+                  id={`option${option}`}
+                  name="option"
+                  checked={selectedAnswer === option}
+                  onChange={() => handleSelect(option)}
+                  className="w-5 h-5 border-4 border-gray-400 rounded-full appearance-none 
+                    checked:border-indigo-600 checked:border-7 cursor-pointer transition-colors mt-1"
+                />
+                <div className="flex-1">
+                  <label htmlFor={`option${option}`} className="text-md font-bold text-gray-600 cursor-pointer block">
+                    {getCleanAnswerText(key) || `${option}) Variant`}
+                  </label>
+                  
+                  {hasImage && imageUrl && (
+                    <div className="mt-2">
+                      <div className="relative w-full max-w-xs h-48">
+                        <img
+                          src={imageUrl}
+                          alt={`${option} variant rasmi`}
+                          className="object-contain w-full h-full rounded-md shadow-sm"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
