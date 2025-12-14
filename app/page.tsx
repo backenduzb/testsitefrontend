@@ -16,7 +16,7 @@ const LoginRegisterPage = () => {
 
     const { login, isAuthenticated } = useAuth();
     const router = useRouter();
-
+    const [isRegistering, setIsRegistering] = useState(false);
     const [classes, setclasses] = useState<string[]>();
     const [registerFormdata, setregisterFormdata] = useState(
         {
@@ -54,14 +54,17 @@ const LoginRegisterPage = () => {
 
     const handleRegisterSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (isRegistering) return;
+        setIsRegistering(true);
         try {
             const res = await axios.post(`${ROOT_URL}/accounts/register/`, registerFormdata);
             showPersistentToast(res.data.username);
-        }
-        catch (e) {
+        } catch (e) {
             console.error(e);
+        } finally {
+            setIsRegistering(false);
         }
-    }
+    };
 
     const showPersistentToast = (username: any) => {
         toast.info(
@@ -202,7 +205,8 @@ const LoginRegisterPage = () => {
                             <button
                                 onClick={handleRegisterSubmit}
                                 type="button"
-                                className="w-full py-2 bg-indigo-600 hover:cursor-pointer hover:bg-indigo-700 text-white font-semibold rounded-lg transition duration-300"
+                                disabled={isRegistering}
+                                className={`w-full py-2 bg-indigo-600 hover:cursor-pointer hover:bg-indigo-700 text-white font-semibold rounded-lg transition duration-300 ${isRegistering ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 Ro‘yxatdan o‘tish
                             </button>
